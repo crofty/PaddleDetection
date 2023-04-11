@@ -24,6 +24,7 @@ import copy
 import threading
 import queue
 import time
+import json
 from collections import defaultdict
 from datacollector import DataCollector, Result
 try:
@@ -197,8 +198,8 @@ class Pipeline(object):
 
 
 def get_model_dir(cfg):
-    """ 
-        Auto download inference model if the model_path is a url link. 
+    """
+        Auto download inference model if the model_path is a url link.
         Otherwise it will use the model_path directly.
     """
     for key in cfg.keys():
@@ -240,13 +241,13 @@ def get_model_dir(cfg):
 class PipePredictor(object):
     """
     Predictor in single camera
-    
-    The pipeline for image input: 
+
+    The pipeline for image input:
 
         1. Detection
         2. Detection -> Attribute
 
-    The pipeline for video input: 
+    The pipeline for video input:
 
         1. Tracking
         2. Tracking -> Attribute
@@ -257,7 +258,7 @@ class PipePredictor(object):
         args (argparse.Namespace): arguments in pipeline, which contains environment and runtime settings
         cfg (dict): config of models in pipeline
         is_video (bool): whether the input is video, default as False
-        multi_camera (bool): whether to use multi camera in pipeline, 
+        multi_camera (bool): whether to use multi camera in pipeline,
             default as False
     """
 
@@ -723,7 +724,7 @@ class PipePredictor(object):
             scale = ShortSizeScale(short_size)
 
         object_in_region_info = {
-        }  # store info for vehicle parking in region       
+        }  # store info for vehicle parking in region
         illegal_parking_dict = None
         cars_count = 0
         retrograde_traj_len = 0
@@ -1021,7 +1022,7 @@ class PipePredictor(object):
                         frame_mot_res, max_len=frame_len)
                     retrograde_traj_len = retrograde_traj_len + 1
 
-                #the number of collected frames is enough to predict 
+                #the number of collected frames is enough to predict
                 if retrograde_traj_len == frame_len:
                     retrograde_mot_res = copy.deepcopy(
                         self.pipeline_res.get('mot'))
@@ -1104,6 +1105,7 @@ class PipePredictor(object):
                         center_traj=None,
                         do_illegal_parking_recognition=False,
                         illegal_parking_dict=None):
+        print('JC: visualize_video');
         image = cv2.cvtColor(image_rgb, cv2.COLOR_RGB2BGR)
         mot_res = copy.deepcopy(result.get('mot'))
 
@@ -1298,6 +1300,12 @@ class PipePredictor(object):
             print("save result to: " + out_path)
             start_idx += boxes_num_i
 
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)
+
 
 def main():
     cfg = merge_cfg(FLAGS)  # use command params to update config
@@ -1306,6 +1314,10 @@ def main():
     pipeline = Pipeline(FLAGS, cfg)
     # pipeline.run()
     pipeline.run_multithreads()
+
+    out_path = os.path.join(pipeline.output_dir, "out.json")
+    with open(out_path, "w") as outfile:
+        outfile.write(json.dumps(pipeline.predictor.collector.get_res(), cls=NumpyEncoder))
 
 
 if __name__ == '__main__':

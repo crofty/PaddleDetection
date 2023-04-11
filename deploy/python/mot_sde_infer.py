@@ -72,7 +72,7 @@ class SDE_Detector(Detector):
                  output_dir='output',
                  threshold=0.5,
                  save_images=False,
-                 save_mot_txts=False,
+                 save_mot_txts=True,
                  reid_model_dir=None):
         super(SDE_Detector, self).__init__(
             model_dir=model_dir,

@@ -77,7 +77,7 @@ class JDE_Detector(Detector):
             output_dir='output',
             threshold=0.5,
             save_images=False,
-            save_mot_txts=False, ):
+            save_mot_txts=True, ):
         super(JDE_Detector, self).__init__(
             model_dir=model_dir,
             device=device,

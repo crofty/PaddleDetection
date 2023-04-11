@@ -97,7 +97,7 @@ class CenterTrack(Detector):
             output_dir='output',
             threshold=0.5,
             save_images=False,
-            save_mot_txts=False, ):
+            save_mot_txts=True, ):
         super(CenterTrack, self).__init__(
             model_dir=model_dir,
             device=device,
@@ -130,7 +130,7 @@ class CenterTrack(Detector):
             vertical_ratio=vertical_ratio,
             track_thresh=track_thresh,
             pre_thresh=pre_thresh)
-    
+
         self.pre_image = None
 
     def get_additional_inputs(self, dets, meta, with_hm=True):
@@ -177,7 +177,7 @@ class CenterTrack(Detector):
             (im_info['im_shape'], )).astype('float32')
         inputs['scale_factor'] = np.array(
             (im_info['scale_factor'], )).astype('float32')
-        
+
         inputs['trans_input'] = im_info['trans_input']
         inputs['inp_width'] = im_info['inp_width']
         inputs['inp_height'] = im_info['inp_height']
@@ -185,7 +185,7 @@ class CenterTrack(Detector):
         inputs['scale'] = im_info['scale']
         inputs['out_height'] = im_info['out_height']
         inputs['out_width'] = im_info['out_width']
-        
+
         if self.pre_image is None:
             self.pre_image = inputs['image']
             # initializing tracker for the first frame
@@ -358,7 +358,7 @@ class CenterTrack(Detector):
 
                 # tracking process
                 self.det_times.tracking_time_s.start()
-                online_tlwhs, online_scores, online_ids = self.tracking(inputs, 
+                online_tlwhs, online_scores, online_ids = self.tracking(inputs,
                     det_result)
                 self.det_times.tracking_time_s.end()
                 self.det_times.img_num += 1
